@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skate. Leaderboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5 url('https://cdn.mos.cms.futurecdn.net/mxzKbcZRzyivESu57n68NN.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .level-filter {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .level-filter select {
+            width: auto;
+            min-width: 250px;
+            padding: 12px 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-section {
+            background: #3a3a3a;
+            padding: 30px;
+            border-radius: 0;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.5);
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #000000;
+            border: 2px solid #555;
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: #1a1a1a;
+            border-color: #777;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .leaderboard {
+            background: rgba(30, 40, 50, 0.95);
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        .leaderboard-header {
+            display: grid;
+            grid-template-columns: 80px 1fr 120px 120px 150px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 120px 120px 150px;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s;
+            align-items: center;
+        }
+
+        .leaderboard-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .rank {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .rank.top-1 { color: #f39c12; }
+        .rank.top-2 { color: #bdc3c7; }
+        .rank.top-3 { color: #e67e22; }
+
+        .player-name {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .score {
+            color: #2ecc71;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .level {
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        .date {
+            color: #95a5a6;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+        }
+
+        .error {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid #e74c3c;
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid #2ecc71;
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .leaderboard-header, .leaderboard-row {
+                grid-template-columns: 60px 1fr 80px 80px;
+                font-size: 12px;
+            }
+            .date {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛹 SKATE LEADERBOARD</h1>
+        
+        <div class="level-filter">
+            <select id="levelFilter" onchange="filterByLevel()">
+                <option value="all">All Levels</option>
+                <option value="Backwash">Backwash</option>
+                <option value="Ledge Hopper">Ledge Hopper</option>
+                <option value="Mega Ramp">Mega Ramp</option>
+            </select>
+        </div>
+        
+        <div class="input-section">
+            <div class="error" id="errorMsg"></div>
+            <div class="success" id="successMsg"></div>
+            
+            <div class="form-group">
+                <label>Player Name</label>
+                <input type="text" id="playerName" placeholder="Enter your gamertag">
+            </div>
+            
+            <div class="form-group">
+                <label>Score</label>
+                <input type="number" id="score" placeholder="Enter your score" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label>Level</label>
+                <select id="level">
+                    <option value="">Select a level</option>
+                    <option value="Backwash">Backwash</option>
+                    <option value="Ledge Hopper">Ledge Hopper</option>
+                    <option value="Mega Ramp">Mega Ramp</option>
+                </select>
+            </div>
+            
+            <button onclick="submitScore()">Submit Score</button>
+        </div>
+
+        <div class="leaderboard">
+            <div class="leaderboard-header">
+                <div>RANK</div>
+                <div>PLAYER</div>
+                <div>SCORE</div>
+                <div>LEVEL</div>
+                <div>DATE</div>
+            </div>
+            <div id="leaderboardContent">
+                <div class="loading">Loading leaderboard...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let allEntries = [];
+        let currentFilter = 'all';
+
+        async function loadLeaderboard() {
+            try {
+                const response = await fetch(`${API_URL}/leaderboard`);
+                const data = await response.json();
+                allEntries = data;
+                
+                filterByLevel();
+            } catch (error) {
+                document.getElementById('leaderboardContent').innerHTML = 
+                    '<div class="loading">Failed to load leaderboard. Make sure the server is running.</div>';
+            }
+        }
+
+        function filterByLevel() {
+            const filterValue = document.getElementById('levelFilter').value;
+            currentFilter = filterValue;
+            
+            const content = document.getElementById('leaderboardContent');
+            
+            let filteredEntries = allEntries;
+            if (filterValue !== 'all') {
+                filteredEntries = allEntries.filter(entry => entry.level === filterValue);
+            }
+            
+            if (filteredEntries.length === 0) {
+                content.innerHTML = '<div class="loading">No scores for this level yet. Be the first!</div>';
+                return;
+            }
+            
+            content.innerHTML = filteredEntries.map((entry, index) => {
+                const rankClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
+                const date = new Date(entry.dateCompleted).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="leaderboard-row">
+                        <div class="rank ${rankClass}">${index + 1}</div>
+                        <div class="player-name">${entry.playerName}</div>
+                        <div class="score">${entry.score.toLocaleString()}</div>
+                        <div class="level">${entry.level}</div>
+                        <div class="date">${date}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function submitScore() {
+            const playerName = document.getElementById('playerName').value.trim();
+            const score = document.getElementById('score').value;
+            const level = document.getElementById('level').value;
+            
+            const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+            
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            
+            if (!playerName || !score || !level) {
+                errorMsg.textContent = 'Please fill in all fields';
+                errorMsg.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/leaderboard`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        playerName: playerName,
+                        score: parseInt(score),
+                        level: level
+                    })
+                });
+                
+                if (response.ok) {
+                    successMsg.textContent = 'Score submitted successfully!';
+                    successMsg.style.display = 'block';
+                    
+                    document.getElementById('playerName').value = '';
+                    document.getElementById('score').value = '';
+                    document.getElementById('level').value = '';
+                    
+                    await loadLeaderboard();
+                } else {
+                    throw new Error('Failed to submit score');
+                }
+            } catch (error) {
+                errorMsg.textContent = 'Failed to submit score. Please try again.';
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        loadLeaderboard();
+        setInterval(loadLeaderboard, 30000);
+    </script>
+</body>
+</html>
